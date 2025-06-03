@@ -1,0 +1,144 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nạp Vàng</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+  <div class="max-w-3xl mx-auto mt-10 p-6 bg-white border border-gray-300 rounded shadow">
+
+    <!-- Tabs -->
+    <div class="flex border-b mb-6">
+      <button onclick="showTab('bank')" class="tab-btn px-4 py-2 text-blue-700 font-semibold border-b-2 border-blue-500">Nạp Qua Ngân Hàng</button>
+      <button onclick="showTab('card')" class="tab-btn px-4 py-2 text-gray-700 font-semibold ml-4">Nạp Thẻ Cào</button>
+    </div>
+
+    <!-- Nạp qua ngân hàng -->
+    <div id="bank" class="tab-content">
+      <h1 class="text-xl font-bold mb-4 text-blue-800 uppercase">Thông Tin Chuyển Khoản</h1>
+      <div class="bg-blue-50 border border-blue-200 p-4 rounded mb-4 text-sm">
+        <p class="text-red-600 font-bold">Chuyển khoản đúng nội dung để nhận vàng</p>
+        <p class="mt-1"><strong>Sai nội dung sẽ không hỗ trợ khiếu nại</strong></p>
+      </div>
+      <div class="space-y-3">
+        <div><label class="block text-gray-700 font-semibold">Số tài khoản:</label><input type="text" value="1234567890" readonly class="w-full border px-3 py-2 rounded bg-gray-100 text-gray-800"></div>
+        <div><label class="block text-gray-700 font-semibold">Chủ tài khoản:</label><input type="text" value=" nè" readonly class="w-full border px-3 py-2 rounded bg-gray-100 text-gray-800"></div>
+        <div><label class="block text-gray-700 font-semibold">Ngân hàng:</label><input type="text" value="Mờ bê bank" readonly class="w-full border px-3 py-2 rounded bg-gray-100 text-gray-800"></div>
+      </div>
+      <div class="mt-6 text-center">
+        <img src="qr-code.png" alt="QR Code" class="w-40 h-40 mx-auto border border-gray-300 rounded">
+      </div>
+    </div>
+
+    <!-- Nạp thẻ cào -->
+    <div id="card" class="tab-content hidden">
+      <h1 class="text-xl font-bold mb-4 text-blue-800 uppercase">Nạp Thẻ Cào</h1>
+      <div class="bg-blue-50 border border-blue-200 p-4 rounded mb-4 text-sm">
+        <p class="text-red-600 font-bold">Tỉ lệ nạp thẻ cào 8400%</p>
+        <p class="text-red-600">Nạp 100k nhận 840tr vàng</p>
+        <p class="text-blue-700">Tặng ngẫu nhiên từ 2tr tới 250tr cho mỗi lượt nạp thẻ</p>
+        <p class="text-blue-700">Mỗi lượt nạp được <strong>tặng kim cương</strong></p>
+        <p class="text-blue-700">Kim cương <span class="text-red-600 font-semibold">đổi lượt quay</span> vàng tại đây</p>
+        <p class="text-gray-600">Sai serial hoặc mệnh giá sẽ không được hỗ trợ giải quyết khiếu nại!</p>
+      </div>
+      <form id="cardForm" class="space-y-4">
+        <div><label class="block font-semibold text-gray-700">Tài khoản</label><input id="usernameField" readonly class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 text-red-600 font-semibold"></div>
+        <div><label class="block font-semibold text-gray-700">Loại thẻ</label><select name="card_type" class="w-full border border-gray-300 rounded px-3 py-2">
+          <option value="Viettel">VIETTEL</option><option value="Mobifone">MOBIFONE</option><option value="Vinaphone">VINAPHONE</option></select></div>
+        <div><label class="block font-semibold text-gray-700">Mệnh giá</label><select name="amount" class="w-full border border-gray-300 rounded px-3 py-2">
+          <option value="">CHỌN ĐÚNG MỆNH GIÁ, NẾU SAI SẼ MẤT THẺ</option><option value="10000">10,000đ</option><option value="20000">20,000đ</option><option value="50000">50,000đ</option><option value="100000">100,000đ</option><option value="200000">200,000đ</option><option value="500000">500,000đ</option></select></div>
+        <div><label class="block font-semibold text-gray-700">Mã thẻ</label><input name="pin" type="text" class="w-full border border-gray-300 rounded px-3 py-2"></div>
+        <div><label class="block font-semibold text-gray-700">Số Serial</label><input name="serial" type="text" class="w-full border border-gray-300 rounded px-3 py-2"></div>
+        <button type="submit" class="bg-cyan-600 text-white px-6 py-2 rounded hover:bg-cyan-700 transition w-full">NẠP NGAY</button>
+        <p id="cardMessage" class="text-center mt-2 text-sm"></p>
+      </form>
+
+      <div id="cardHistory" class="mt-6">
+        <h2 class="text-lg font-bold text-gray-700 mb-2">Lịch sử nạp thẻ</h2>
+        <table class="w-full border text-sm bg-white rounded shadow">
+          <thead><tr class="bg-gray-200 text-gray-800"><th class="border px-2 py-1">Loại thẻ</th><th class="border px-2 py-1">Mệnh giá</th><th class="border px-2 py-1">Mã</th><th class="border px-2 py-1">Serial</th><th class="border px-2 py-1">Trạng thái</th></tr></thead>
+          <tbody id="cardHistoryBody" class="text-center"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('text-blue-700', 'border-blue-500'));
+      document.getElementById(tabId).classList.remove('hidden');
+      event.target.classList.add('text-blue-700', 'border-blue-500');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (!user.username) return window.location.href = '/login.html';
+      document.getElementById('usernameField').value = user.username;
+      loadCardHistory(user.username);
+
+      document.getElementById('cardForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const form = e.target;
+        const data = {
+          card_type: form.card_type.value,
+          amount: form.amount.value,
+          pin: form.pin.value,
+          serial: form.serial.value,
+          username: user.username
+        };
+
+        const msg = document.getElementById('cardMessage');
+        try {
+          const res = await fetch('/api/napthe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          const result = await res.json();
+          msg.textContent = result.success ? 'Thành công, đang chờ duyệt!' : (result.message || 'Nạp thất bại.');
+          msg.className = result.success ? 'text-green-600' : 'text-red-600';
+          if (result.success) loadCardHistory(user.username);
+        } catch {
+          msg.textContent = 'Lỗi kết nối máy chủ.';
+          msg.className = 'text-red-600';
+        }
+      });
+    });
+
+    async function loadCardHistory(username) {
+      try {
+        const res = await fetch(`/api/napthe/history/${username}`);
+        const data = await res.json();
+        const tbody = document.getElementById('cardHistoryBody');
+        tbody.innerHTML = '';
+        if (data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="py-2 text-gray-500">Chưa có lịch sử nạp</td></tr>';
+          return;
+        }
+        data.forEach(entry => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td class="border px-2 py-1">${entry.card_type}</td>
+            <td class="border px-2 py-1">${Number(entry.amount).toLocaleString()}đ</td>
+            <td class="border px-2 py-1 text-xs">${entry.pin}</td>
+            <td class="border px-2 py-1 text-xs">${entry.serial}</td>
+            <td class="border px-2 py-1 font-semibold ${entry.status === 'approved' ? 'text-green-600' : 'text-orange-500'}">
+              ${entry.status === 'approved' ? 'Đã duyệt' : 'Đang chờ duyệt'}
+            </td>`;
+          tbody.appendChild(row);
+        });
+      } catch (e) {
+        console.error("Lỗi tải lịch sử nạp:", e);
+      }
+    }
+  </script>
+
+  <div class="mt-10 text-center">
+    <a href="index.html" class="inline-block bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">← Quay lại Trang Chủ</a>
+  </div>
+</body>
+</html>

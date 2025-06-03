@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="vi">
+<script>
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  if (!user || !user.is_admin) {
+    window.location.href = "/index.html";
+  }
+</script>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Chọn Trang Quản Trị</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-100 to-purple-200 min-h-screen flex items-center justify-center font-sans">
+
+  <div class="bg-white shadow-2xl rounded-2xl p-10 max-w-md text-center">
+    <h1 class="text-2xl font-bold text-gray-700 mb-6">Xin chào, Admin!</h1>
+    <p class="text-gray-600 mb-6">Vui lòng chọn trang bạn muốn truy cập:</p>
+    
+    <div class="space-y-4">
+      <a href="/admin.html" class="block w-full bg-blue-500 text-white py-3 rounded-xl text-lg font-semibold hover:bg-blue-600 transition">Duyệt Thẻ</a>
+      <a href="/admin_users.html" class="block w-full bg-green-500 text-white py-3 rounded-xl text-lg font-semibold hover:bg-green-600 transition">Quản Lý Người Dùng</a>
+      <a href="/login.html" class="block w-full bg-gray-400 text-white py-3 rounded-xl text-lg font-semibold hover:bg-gray-500 transition mt-4">
+        ← Quay lại đăng nhập
+      </a>
+    </div>
+  </div>
+<button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded mt-4">Đăng xuất</button>
+
+<script>
+  function logout() {
+    localStorage.removeItem("user");
+    window.location.href = "/login.html";
+  }
+</script>
+
+</body>
+</html>

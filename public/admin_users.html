@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded mt-4">Đăng xuất</button>
+
+<script>
+  function logout() {
+    localStorage.removeItem("user");
+    window.location.href = "/login.html";
+  }
+</script>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Quản Lý Người Dùng</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+  <div class="max-w-6xl mx-auto bg-white p-6 rounded shadow">
+    <h1 class="text-xl font-bold mb-4">Trang Quản Lý Người Dùng</h1>
+    <table class="w-full border text-sm">
+      <thead class="bg-gray-200">
+        <tr>
+          <th class="border px-2 py-1">ID</th>
+          <th class="border px-2 py-1">Tên đăng nhập</th>
+          <th class="border px-2 py-1">Số dư</th>
+          <th class="border px-2 py-1">Admin?</th>
+          <th class="border px-2 py-1">Khóa?</th>
+          <th class="border px-2 py-1">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody id="userTable"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (!user || !user.is_admin) window.location.href = "/index.html";
+
+    fetch('/api/admin/users')
+      .then(res => res.json())
+      .then(users => {
+        const tbody = document.getElementById('userTable');
+        users.forEach(u => {
+          tbody.innerHTML += `
+            <tr>
+              <td class="border px-2 py-1">${u.id}</td>
+              <td class="border px-2 py-1">${u.username}</td>
+              <td class="border px-2 py-1">${Number(u.balance).toLocaleString()}</td>
+              <td class="border px-2 py-1">${u.is_admin ? '✅' : '❌'}</td>
+              <td class="border px-2 py-1">${u.banned ? '🚫' : '✅'}</td>
+              <td class="border px-2 py-1 space-x-2">
+                <button onclick="ban(${u.id})" class="bg-red-500 text-white px-2 py-1 rounded">Khóa</button>
+                <button onclick="addGold(${u.id})" class="bg-yellow-500 text-white px-2 py-1 rounded">+ Vàng</button>
+              </td>
+            </tr>`;
+        });
+      });
+
+    function ban(id) {
+      fetch('/api/admin/ban', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      }).then(() => location.reload());
+    }
+
+    function addGold(id) {
+      const amount = prompt("Nhập số vàng muốn cộng thêm:");
+      if (!amount || isNaN(amount)) return alert("Số không hợp lệ!");
+      fetch('/api/admin/add-gold', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, amount })
+      }).then(() => location.reload());
+    }
+  </script>
+</body>
+<button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded mt-4">Đăng xuất</button>
+
+<script>
+  function logout() {
+    localStorage.removeItem("user");
+    window.location.href = "/login.html";
+  }
+</script>
+
+</html>

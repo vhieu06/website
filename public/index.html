@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Trang Cá Cược</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+</head>
+<script>
+  // Kiểm tra người dùng đăng nhập và có phải admin không
+  document.addEventListener("DOMContentLoaded", function () {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    if (!user || !user.username) {
+      window.location.href = '/login.html';
+      return;
+    }
+
+    if (user.is_admin) {
+      window.location.href = '/admin_redirect.html';
+    }
+  });
+</script>
+
+<body class="bg-white font-sans">
+  <!-- Kiểm tra đăng nhập: nếu chưa có thông tin user thì chuyển hướng sang trang đăng nhập -->
+  <script>
+    if (!localStorage.getItem('user')) {
+      window.location.href = '/login.html';
+    }
+  </script>
+
+  <div class="max-w-4xl mx-auto border border-t-0 border-l-0 border-r-0 border-blue-400">
+    <!-- Navigation bar -->
+    <nav class="bg-[#1ca1b9] flex items-center px-6 py-4 space-x-6 text-white font-semibold text-lg">
+      <a href="index.html" class="hover:underline">TRANG CHỦ</a>
+      <a href="buy.html" class="hover:underline">MUA VÀNG</a>
+      <a href="withdraw.html" class="relative hover:underline">
+        RÚT VÀNG
+        <span class="absolute bottom-0 left-0 w-full h-[2px] bg-white"></span>
+      </a>
+      <!-- Hiển thị số dư người dùng -->
+      <span id="userBalance" class="ml-auto font-bold"></span>
+      <!-- Nút Đăng xuất -->
+      <button id="logoutBtn" class="ml-4 flex items-center border border-white rounded px-4 py-2 hover:bg-white hover:text-[#1ca1b9] transition">
+        <i class="fas fa-sign-out-alt mr-2"></i> ĐĂNG XUẤT
+      </button>
+    </nav>
+
+    <!-- Phần thông tin game -->
+    <div class="p-6 border border-blue-400 border-t-0">
+      <p class="text-lg mb-2">
+        Mã phiên: <span id="session" class="text-red-600 font-semibold"></span>
+      </p>
+      <p class="text-lg mb-2">
+        Máy chủ: <span class="text-red-600 font-semibold">Chanle</span>
+      </p>
+      <p class="text-lg mb-2">
+        Kết quả giải trước: <span id="prevResult" class="text-red-600 font-semibold"></span>
+      </p>
+      <p class="text-lg mb-2">
+        Thời gian còn: <span id="countdown" class="text-red-600 font-semibold">60 giây</span>
+      </p>
+      <p class="text-lg mb-2">
+        Chẵn: <span class="text-blue-600 font-semibold">0</span> - Lẻ: <span class="text-yellow-400 font-semibold">0</span>
+      </p>
+      <p class="text-lg mb-2">
+  Thời gian hoạt động: <span class="text-red-600 font-semibold">2/24</span>
+</p>
+<div id="historyBlock" class="mb-4">
+  <p class="text-lg font-semibold mb-1">Lịch sử:</p>
+  <div id="resultLetters" class="flex space-x-2 font-bold text-sm text-white mb-1"></div>
+  <div id="resultNumbers" class="flex space-x-2 font-mono text-xs text-gray-700"></div>
+</div>
+
+      
+      <!-- Phần đặt cược -->
+      <div class="mb-4">
+        <div class="text-center text-blue-400 font-semibold text-lg mb-2">
+          <i class="fas fa-trophy mx-1"></i> DỰ ĐOÁN <i class="fas fa-trophy mx-1"></i>
+        </div>
+        <!-- Chọn cửa cược: chỉ được chọn "CHẴN" hoặc "LẺ" -->
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <button id="btnChan" class="bet-choice bg-blue-300 font-bold text-white py-3 rounded text-lg" onclick="selectChoice('CHẴN')">
+            CHẴN
+          </button>
+          <button id="btnLe" class="bet-choice bg-yellow-300 font-bold text-white py-3 rounded text-lg" onclick="selectChoice('LẺ')">
+            LẺ
+          </button>
+        </div>
+        <!-- Nhập số vàng cược -->
+        <div class="flex items-center border border-gray-300 rounded px-4 py-3 space-x-3 text-lg text-gray-700">
+          <i class="fas fa-gavel"></i>
+          <input id="betAmount" type="number" placeholder="Nhập số vàng cược" class="flex-grow outline-none text-lg" />
+        </div>
+        <!-- Nút ĐẶT CƯỢC MÀU ĐỎ -->
+        <div class="mt-4 text-center">
+          <button id="redBetBtn" class="bg-red-700 text-white font-bold text-lg py-3 rounded w-full" onclick="submitBet()">
+            ĐẶT CƯỢC
+          </button>
+        </div>
+        <!-- Hiển thị thông tin các cược đã đặt -->
+        <div id="betInfo" class="mt-4 text-center text-lg font-semibold text-green-600"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Socket.IO client (giả sử server đã tích hợp Socket.IO) -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // Khi trang load xong, hiển thị kết quả phiên trước từ localStorage (nếu có)
+    window.addEventListener("load", function() {
+  const storedResult = localStorage.getItem("prevResult");
+  if (storedResult) {
+    document.getElementById('prevResult').innerText = storedResult;
+  }
+
+  // ✅ Khôi phục và hiển thị lịch sử nếu có
+  const historyArray = JSON.parse(localStorage.getItem("resultHistoryArray") || "[]");
+
+  const lettersRow = document.getElementById("resultLetters");
+  const numbersRow = document.getElementById("resultNumbers");
+
+  if (lettersRow && numbersRow) {
+    lettersRow.innerHTML = "";
+    numbersRow.innerHTML = "";
+
+    historyArray.forEach(pair => {
+      const letterSpan = document.createElement("span");
+      letterSpan.textContent = pair.letter;
+      letterSpan.className = `w-6 h-6 rounded bg-${pair.letter === 'C' ? 'blue' : 'yellow'}-500 text-white flex items-center justify-center`;
+
+      const numberSpan = document.createElement("span");
+      numberSpan.textContent = pair.number;
+      numberSpan.className = "w-6 text-center";
+
+      lettersRow.appendChild(letterSpan);
+      numbersRow.appendChild(numberSpan);
+    });
+  }
+});
+
+    
+    // Lấy thông tin người dùng từ localStorage
+    let user = JSON.parse(localStorage.getItem('user'));
+    document.getElementById('userBalance').innerText = "Số dư: " + user.balance.toLocaleString();
+
+    // Xử lý nút Đăng xuất
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+      localStorage.removeItem('user');
+      window.location.href = '/login.html';
+    });
+
+    // Biến toàn cục cho lựa chọn và danh sách các cược của phiên hiện tại
+    let selectedChoice = null;
+    let userBets = []; // Mảng chứa các object { choice, amount }
+
+    // Hàm xử lý chọn cửa cược. Nếu đã đặt cược và lựa chọn trước không trùng với lựa chọn mới thì không cho thay đổi.
+    function selectChoice(choice) {
+      if (userBets.length > 0 && userBets[0].choice !== choice) {
+        return alert("Bạn đã đặt cược vào cửa " + userBets[0].choice + ". Không được thay đổi cửa cược trong phiên này!");
+      }
+      selectedChoice = choice;
+      // Cập nhật hiệu ứng hiển thị cho nút được chọn
+      if (choice === "CHẴN") {
+        document.getElementById('btnChan').classList.add('ring-4', 'ring-green-500');
+        document.getElementById('btnLe').classList.remove('ring-4', 'ring-green-500');
+      } else {
+        document.getElementById('btnLe').classList.add('ring-4', 'ring-green-500');
+        document.getElementById('btnChan').classList.remove('ring-4', 'ring-green-500');
+      }
+    }
+
+    // Hàm cập nhật hiển thị danh sách cược đã đặt.
+    function updateBetInfoDisplay() {
+      let info = "";
+      userBets.forEach(bet => {
+        info += "Bạn đã đặt " + bet.amount.toLocaleString() + " vào cửa " + bet.choice + "<br/>";
+      });
+      document.getElementById('betInfo').innerHTML = info;
+    }
+
+    // Hàm xử lý đặt cược (cho phép đặt nhiều lần trong cùng phiên, nhưng chỉ cùng một cửa).
+    function submitBet() {
+      if (!selectedChoice) {
+        return alert("Vui lòng chọn cửa cược (Chẵn hoặc Lẻ) trước khi đặt cược.");
+      }
+      const betAmount = Number(document.getElementById('betAmount').value);
+      const minBet = 1000000, maxBet = 10000000000;
+      if (isNaN(betAmount) || betAmount < minBet || betAmount > maxBet) {
+        return alert("Số vàng cược không hợp lệ. (Từ 1.000.000 đến 10.000.000.000)");
+      }
+      if (userBets.length > 0 && userBets[0].choice !== selectedChoice) {
+        return alert("Bạn đã đặt cược vào cửa " + userBets[0].choice + ". Không được đặt cược vào cửa khác!");
+      }
+      // Gửi yêu cầu đặt cược đến server
+      fetch('/bet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          betAmount: betAmount,
+          choice: selectedChoice
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Cập nhật số dư mới từ dữ liệu trả về của server
+          user.balance = data.newBalance;
+          localStorage.setItem('user', JSON.stringify(user));
+          document.getElementById('userBalance').innerText = "Số dư: " + user.balance.toLocaleString();
+
+          // Thêm cược vào mảng userBets và cập nhật hiển thị
+          userBets.push({ choice: selectedChoice, amount: betAmount });
+          updateBetInfoDisplay();
+
+          // Xoá ô nhập số
+          document.getElementById('betAmount').value = "";
+        } else {
+          alert(data.message);
+        }
+      })
+      .catch(err => console.error(err));
+    }
+
+    // Socket.IO: nhận trạng thái game từ server
+    const socket = io();
+    socket.on('gameState', function(state) {
+      document.getElementById('countdown').innerText = state.countdown + " giây";
+      document.getElementById('session').innerText = "#" + state.round;
+      
+      // Nếu phiên đang khóa cược (10 giây cuối), disable lựa chọn và nút đặt cược.
+      const disableBet = state.bettingLocked;
+      document.querySelectorAll('.bet-choice, #redBetBtn').forEach(btn => btn.disabled = disableBet);
+    });
+
+    // Khi phiên kết thúc, server gửi sự kiện roundResult
+  socket.on('roundResult', function(result) {
+      // Loại bỏ alert thông báo
+      // Cập nhật phần "Kết quả giải trước" và lưu vào localStorage để reload trang vẫn hiển thị được
+      document.getElementById('prevResult').innerText = result.number;
+      localStorage.setItem("prevResult", result.number);
+      // Tính toán chữ hiển thị: nếu số được tạo là chẵn thì là "C", lẻ thì "L"
+    let resultNum = parseInt(result.number, 10);
+    // Xác định kết quả là C hay L
+let resultLetter = (resultNum % 2 === 0) ? 'C' : 'L';
+let resultPair = { letter: resultLetter, number: result.number };
+
+// Lấy mảng lịch sử từ localStorage
+let historyArray = JSON.parse(localStorage.getItem("resultHistoryArray") || "[]");
+
+// Thêm vào mảng
+historyArray.push(resultPair);
+
+// Giới hạn độ dài 10
+if (historyArray.length > 10) {
+  historyArray = historyArray.slice(-10);
+}
+
+// Lưu lại
+localStorage.setItem("resultHistoryArray", JSON.stringify(historyArray));
+
+// Hiển thị 2 dòng: chữ và số
+const lettersRow = document.getElementById("resultLetters");
+const numbersRow = document.getElementById("resultNumbers");
+
+lettersRow.innerHTML = "";
+numbersRow.innerHTML = "";
+
+historyArray.forEach(pair => {
+  const letterSpan = document.createElement("span");
+  letterSpan.textContent = pair.letter;
+  letterSpan.className = `w-6 h-6 rounded bg-${pair.letter === 'C' ? 'blue' : 'yellow'}-500 text-white flex items-center justify-center`;
+
+  const numberSpan = document.createElement("span");
+  numberSpan.textContent = pair.number;
+  numberSpan.className = "w-6 text-center";
+
+  lettersRow.appendChild(letterSpan);
+  numbersRow.appendChild(numberSpan);
+});
+
+      // Xử lý kết quả cho từng cược của người dùng trong phiên hiện tại
+      if (userBets.length > 0) {
+          let resultMsg = "";
+          userBets.forEach(bet => {
+              let num = parseInt(result.number, 10);
+              let isEven = (num % 2 === 0);
+              let win = (bet.choice === "CHẴN" && isEven) || (bet.choice === "LẺ" && !isEven);
+              if (win) {
+                  let winAmount = bet.amount * 1.9; // tiền thắng = cược * 1.9
+                  user.balance += winAmount;
+                  resultMsg += "Bạn đặt " + bet.amount.toLocaleString() + " vào cửa " + bet.choice 
+                             + " thắng: +" + winAmount.toLocaleString() + "<br/>";
+              } else {
+                  resultMsg += "Cược " + bet.amount.toLocaleString() + " vào cửa " + bet.choice + " không trúng.<br/>";
+              }
+          });
+          // Cập nhật số dư mới sau kết quả
+          localStorage.setItem('user', JSON.stringify(user));
+          document.getElementById('userBalance').innerText = "Số dư: " + user.balance.toLocaleString();
+          document.getElementById('betInfo').innerHTML = resultMsg;
+          // Reset danh sách cược cho phiên mới
+          userBets = [];
+      }
+  });
+  // ✅ Tham gia phòng riêng theo user ID sau khi kết nối
+socket.on("connect", () => {
+  socket.emit("joinRoom", user.id);
+});
+
+// ✅ Lắng nghe sự kiện cập nhật số dư từ server khi thắng
+socket.on('balanceUpdate', function (newBalance) {
+  user.balance = newBalance;
+  localStorage.setItem('user', JSON.stringify(user));
+  document.getElementById('userBalance').innerText = "Số dư: " + user.balance.toLocaleString();
+});
+
+</script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+ 
+
+  if (user && user.id) {
+    socket.on("connect", () => {
+  socket.emit("joinRoom", user.id);
+}); // Tham gia room riêng của người dùng
+
+    socket.on("balanceUpdate", (newBalance) => {
+      alert("Số dư của bạn đã được cập nhật!");
+      // Cập nhật số dư trên giao diện nếu có thẻ hiển thị số dư
+      document.getElementById("balance").textContent = Number(newBalance).toLocaleString();
+    });
+  }
+</script>
+
+</body>
+</html>

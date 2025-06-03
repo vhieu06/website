@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="vi">
+<script>
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  if (!user || !user.is_admin) {
+    window.location.href = "/index.html"; // Không phải admin → chuyển về trang chính
+  }
+</script>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Duyệt Thẻ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-6 bg-gray-50 font-sans">
+  <div class="max-w-5xl mx-auto bg-white p-4 shadow rounded">
+    <h1 class="text-xl font-bold mb-4">Danh sách yêu cầu nạp thẻ</h1>
+    <table id="requestTable" class="w-full text-sm border">
+      <thead><tr>
+        <th class="border">Tài khoản</th>
+        <th class="border">Loại thẻ</th>
+        <th class="border">Mệnh giá</th>
+        <th class="border">Mã thẻ</th>
+        <th class="border">Serial</th>
+        <th class="border">Thao tác</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    fetch('/api/admin/card-requests')
+      .then(res => res.json())
+      .then(data => {
+        const table = document.querySelector('#requestTable tbody');
+        data.forEach(req => {
+          table.innerHTML += `
+            <tr>
+              <td class="border">${req.username}</td>
+              <td class="border">${req.card_type}</td>
+              <td class="border">${req.amount}</td>
+              <td class="border text-xs">${req.pin}</td>
+              <td class="border text-xs">${req.serial}</td>
+              <td class="border">
+                <button onclick="approve(${req.id}, '${req.username}', ${req.amount})"
+                  class="bg-green-500 text-white px-2 py-1 rounded">Duyệt</button>
+              </td>
+            </tr>`;
+        });
+      });
+
+    function approve(id, username, amount) {
+      fetch('/api/admin/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, username, amount })
+      }).then(() => location.reload());
+    }
+  </script>
+</body>
+<button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded mt-4">Đăng xuất</button>
+
+<script>
+  function logout() {
+    localStorage.removeItem("user");
+    window.location.href = "/login.html";
+  }
+</script>
+
+</html>
